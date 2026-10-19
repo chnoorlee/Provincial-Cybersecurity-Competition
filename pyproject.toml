@@ -1,0 +1,15 @@
+[project]
+name = "xunan-inspector"
+version = "0.1.0"
+description = "Evidence-based authorized website inspection agent for the Zhejiang cybersecurity competition"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Provincial Cybersecurity Competition Team" }]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["xunan"]
+

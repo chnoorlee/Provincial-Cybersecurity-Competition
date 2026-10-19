@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#142b36">
+  <title>巡安 · 网站安全巡检工作台</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="主导航">
+      <a class="brand" href="#overview" aria-label="巡安首页"><span class="brand-mark">巡</span><span>巡安<small>网站安全巡检工作台</small></span></a>
+      <div class="workspace-label"><span class="tiny-dot"></span> COMPETITION WORKSPACE</div>
+      <nav class="navigation">
+        <button class="nav-item active" data-page="overview" aria-current="page"><span class="nav-icon" aria-hidden="true">▦</span>工作台<span class="nav-caption">Overview</span></button>
+        <button class="nav-item" data-page="new-run"><span class="nav-icon" aria-hidden="true">＋</span>发起巡检</button>
+        <button class="nav-item" data-page="history"><span class="nav-icon" aria-hidden="true">◷</span>巡检记录</button>
+        <button class="nav-item" data-page="findings"><span class="nav-icon" aria-hidden="true">◇</span>风险与证据<span class="nav-count" id="nav-finding-count">0</span></button>
+        <button class="nav-item" data-page="reports"><span class="nav-icon" aria-hidden="true">▤</span>报告中心</button>
+        <button class="nav-item" data-page="settings"><span class="nav-icon" aria-hidden="true">⚙</span>接入与计划</button>
+      </nav>
+      <div class="sidebar-note"><span class="eyebrow">从发现，到确认</span><p>每一条风险都留下证据。<br>每一次复查都能看见变化。</p><span class="version-chip">规则检测 · 可追溯证据</span></div>
+      <div class="sidebar-footer"><span class="avatar">巡</span><div>比赛项目工作区<small>恒脑 API 接入就绪 · 待连接</small></div></div>
+    </aside>
+
+    <div class="main-shell">
+      <header class="topbar"><div class="breadcrumb">巡安 <span>/</span> <strong id="breadcrumb-current">工作台</strong></div><div class="topbar-right"><span id="connection-status" class="connection"><i></i>正在连接</span><button id="refresh-button" class="icon-button" type="button" title="刷新数据" aria-label="刷新数据">↻</button><span class="environment-tag">本地 / 私有部署</span></div></header>
+      <main id="main" tabindex="-1">
+        <section id="page-overview" class="page active" aria-labelledby="overview-title">
+          <div class="page-heading"><div><p class="eyebrow">SECURITY AT A GLANCE</p><h1 id="overview-title">让网站风险，看得清楚。</h1><p class="subtitle">从页面巡检、证据确认，到修复后的再次检查。</p></div><button class="button primary" data-go="new-run"><span aria-hidden="true">＋</span> 发起巡检</button></div>
+          <div class="welcome-banner"><div class="banner-icon" aria-hidden="true">✓</div><div><strong>第一次使用？先走完一次完整演示。</strong><p>检查内置样例 → 查看证据 → 检查修复版 → 对比变化。演示数据不代表真实网站结果。</p></div><button class="button light" id="quick-demo">开始样例演示 <span aria-hidden="true">↗</span></button></div>
+          <div class="metric-grid" id="overview-metrics">
+            <article class="metric-card"><span class="metric-label">近期巡检记录</span><strong id="metric-runs">0<span>次</span></strong><p>展示最近保存的 100 条记录</p><span class="metric-symbol" aria-hidden="true">◷</span></article>
+            <article class="metric-card"><span class="metric-label">最新巡检发现</span><strong id="metric-findings">—</strong><p id="metric-findings-caption">发起巡检后显示</p><span class="metric-symbol" aria-hidden="true">◇</span></article>
+            <article class="metric-card metric-risk"><span class="metric-label">最新巡检高风险发现</span><strong id="metric-high">—</strong><p>先确认，再安排修复</p><span class="metric-symbol" aria-hidden="true">!</span></article>
+            <article class="metric-card"><span class="metric-label">已配置的巡检计划</span><strong id="metric-schedules">0<span>个</span></strong><p>按计划持续关注网站变化</p><span class="metric-symbol" aria-hidden="true">↻</span></article>
+          </div>
+          <div class="overview-grid">
+            <article class="panel latest-panel"><div class="panel-heading"><div><p class="eyebrow">LATEST INSPECTION</p><h2>最近一次巡检</h2></div><button class="text-button" data-go="history">全部记录 <span aria-hidden="true">→</span></button></div><div id="latest-run-content" class="panel-body"></div></article>
+            <article class="panel"><div class="panel-heading"><div><p class="eyebrow">EVIDENCE FIRST</p><h2>你的巡检路径</h2></div><span class="small-label">四步完成</span></div><ol class="journey"><li><span>01</span><div><strong>选择检查范围</strong><p>使用内置样例，或检查已授权的网站。</p></div></li><li><span>02</span><div><strong>定位风险证据</strong><p>查看具体页面、命中内容与检测规则。</p></div></li><li><span>03</span><div><strong>人工确认与修复</strong><p>标记真实问题和误报，记录处理意见。</p></div></li><li><span>04</span><div><strong>再次检查，对比变化</strong><p>本次未发现的风险仍需结合覆盖情况确认。</p></div></li></ol></article>
+          </div>
+          <article class="panel"><div class="panel-heading"><div><p class="eyebrow">PRIORITY FINDINGS</p><h2>值得先看的发现</h2></div><button class="text-button" data-go="findings">查看所有证据 <span aria-hidden="true">→</span></button></div><div id="overview-findings"></div></article>
+          <p class="footnote">当前检查由确定性规则执行。恒脑智能体可通过 API 调用这些能力；是否接入以平台实际配置为准。</p>
+        </section>
+
+        <section id="page-new-run" class="page" aria-labelledby="new-run-title" hidden>
+          <div class="page-heading"><div><p class="eyebrow">NEW INSPECTION</p><h1 id="new-run-title">开始一次有边界的巡检</h1><p class="subtitle">选好范围，留下证据，再把结果交给人来确认。</p></div><span class="step-chip">01 选择 → 02 检查 → 03 查看</span></div>
+          <div class="form-layout"><form id="run-form" class="panel form-panel"><fieldset><legend>1. 这次检查什么？</legend><div class="choice-grid"><label class="choice-card"><input type="radio" name="mode" value="demo" checked><span><strong>内置演示样例</strong><small>无需配置，体验发现与复查流程</small></span></label><label class="choice-card"><input type="radio" name="mode" value="url"><span><strong>已授权的网站</strong><small>仅限服务端已配置的目标范围</small></span></label></div></fieldset>
+            <div id="demo-fields" class="form-section"><label for="demo-variant">选择样例版本</label><select id="demo-variant" name="variant"><option value="before">修复前 · 包含预设风险</option><option value="after">修复后 · 用于对比变化</option></select><p class="field-help">建议先检查“修复前”，再选择上次记录作为对比基线，检查“修复后”。</p></div>
+            <div id="url-fields" class="form-section" hidden><label for="target-input">网站地址</label><input id="target-input" name="target" type="url" placeholder="https://已授权的演示网站" list="target-options" autocomplete="off"><datalist id="target-options"></datalist><p class="field-help" id="target-help">目标必须先由管理员加入服务端允许列表。</p><label for="max-pages">最多检查页面数</label><input id="max-pages" name="max_pages" type="number" min="1" max="30" value="12"></div>
+            <fieldset><legend>2. 需要额外关注什么？</legend><label for="custom-keywords">自定义敏感关键词 <span class="optional">可选</span></label><textarea id="custom-keywords" rows="3" placeholder="每行一个，例如：&#10;内部资料&#10;禁止公开"></textarea><p class="field-help">最多 30 个，每个 1～80 字，按文字匹配。请用测试词或团队确认的关键词；命中仅表示需要核查。</p></fieldset>
+            <fieldset><legend>3. 和哪次巡检对比？</legend><label for="baseline-select">对比基线 <span class="optional">可选</span></label><select id="baseline-select"><option value="">首次检查，暂不对比</option></select><p class="field-help">选择同一个目标的历史记录，区分新发现、持续存在和本次未再发现的问题。</p></fieldset>
+            <label class="check-row"><input id="authorized" type="checkbox" required><span>我确认使用内置样例，或已获得该网站和检查范围的授权。</span></label>
+            <div class="form-actions"><button type="submit" class="button primary" id="run-submit">开始巡检 <span aria-hidden="true">→</span></button><p id="run-progress" class="field-help" role="status"></p></div>
+          </form><aside class="form-aside"><div class="side-tip"><span class="tip-number">01—03</span><h2>结果里会有什么？</h2><p>每条发现包含来源地址、命中证据、风险解释和修复建议。可以人工确认，也可以标记为误报。</p><hr><h3>一次巡检不等于完整安全评估</h3><p>当前版本检查页面内容和常见配置。遇到抓取失败、页面上限或未覆盖的内容，会在结果中明确说明。</p><hr><h3>复查时保留判断余地</h3><p>“本次未再发现”表示这次没有命中，需要结合页面覆盖情况确认是否已修复。</p></div></aside></div>
+        </section>
+
+        <section id="page-history" class="page" aria-labelledby="history-title" hidden><div class="page-heading"><div><p class="eyebrow">INSPECTION HISTORY</p><h1 id="history-title">每一次检查，都有记录。</h1><p class="subtitle">保留结果、覆盖范围和时间，方便复查与演示。</p></div><button class="button primary" data-go="new-run">＋ 发起巡检</button></div><article class="panel"><div class="panel-heading"><h2>巡检记录</h2><span class="small-label" id="history-count">0 条记录</span></div><div id="history-list"></div></article></section>
+
+        <section id="page-findings" class="page" aria-labelledby="findings-title" hidden><div class="page-heading"><div><p class="eyebrow">FINDINGS & EVIDENCE</p><h1 id="findings-title">找到问题，也找到依据。</h1><p class="subtitle">规则命中的内容需要人工核查；点击一条发现查看完整证据。</p></div></div><div class="toolbar"><div class="control-grow"><label for="finding-run">选择巡检记录</label><select id="finding-run"></select></div><div><label for="severity-filter">风险级别</label><select id="severity-filter"><option value="all">全部级别</option><option value="high">高风险</option><option value="medium">中风险</option><option value="low">低风险</option><option value="info">提示</option></select></div><div><label for="review-filter">确认状态</label><select id="review-filter"><option value="all">全部状态</option><option value="pending">待确认</option><option value="confirmed">已确认</option><option value="false_positive">误报</option></select></div></div><div id="finding-run-meta"></div><div id="comparison-panel"></div><article class="panel"><div class="panel-heading"><h2>风险清单</h2><span id="findings-count" class="small-label">0 条发现</span></div><div id="findings-table"></div></article><article class="panel coverage-panel" id="coverage-panel" hidden><div class="panel-heading"><h2>检查范围与过程</h2><span class="small-label">覆盖情况会影响复查结论</span></div><div id="coverage-content" class="panel-body"></div></article></section>
+
+        <section id="page-reports" class="page" aria-labelledby="reports-title" hidden><div class="page-heading"><div><p class="eyebrow">REPORT CENTER</p><h1 id="reports-title">让结果，可以交付。</h1><p class="subtitle">导出包含证据和范围说明的报告，用于队内协作、复查和比赛展示。</p></div></div><div class="report-format-grid"><article><span class="format-icon">H</span><h3>可读网页</h3><p>适合查看、打印和演示汇报</p></article><article><span class="format-icon">M</span><h3>Markdown</h3><p>方便整理进项目报告和文档</p></article><article><span class="format-icon">C</span><h3>CSV 表格</h3><p>汇总发现，跟踪处理进度</p></article><article><span class="format-icon">J</span><h3>JSON 数据</h3><p>保留结构化结果，便于接入</p></article></div><article class="panel"><div class="panel-heading"><h2>选择一份巡检报告</h2><span class="small-label">每份报告对应一次实际巡检</span></div><div id="report-list"></div></article></section>
+
+        <section id="page-settings" class="page" aria-labelledby="settings-title" hidden><div class="page-heading"><div><p class="eyebrow">CONNECTION & SCHEDULE</p><h1 id="settings-title">接好工具，让巡检持续发生。</h1><p class="subtitle">管理授权目标、定时计划，以及恒脑平台的接入方式。</p></div></div><div class="settings-grid"><article class="panel"><div class="panel-heading"><h2>服务连接</h2><span id="settings-connection" class="small-label">正在连接</span></div><form id="token-form" class="panel-body"><p class="body-copy">本机打开时会自动获取会话。远程访问时，请填写部署者提供的 API 访问令牌。</p><label for="api-token">API 访问令牌</label><input id="api-token" type="password" autocomplete="off" placeholder="远程访问时填写"><p class="field-help">手动填写的令牌仅保存在当前浏览器会话中，关闭会话后失效。</p><div class="button-row"><button class="button primary" type="submit">连接服务</button><button class="button secondary" type="button" id="clear-token">清除手动令牌</button></div></form></article><article class="panel"><div class="panel-heading"><h2>已授权目标</h2><span class="small-label">由服务端配置</span></div><div id="configured-targets" class="panel-body"></div></article></div>
+          <article class="panel hengnao-panel"><div><p class="eyebrow">HENGNAO INTEGRATION</p><h2>恒脑负责组织流程，巡安提供检测能力。</h2><p>在恒脑中配置 API 工具，调用巡检接口，接收结构化证据，再生成通俗的解释与修复建议。</p></div><span class="status-pill neutral">接入文件已准备 · 需在平台配置</span><ol class="integration-steps"><li><span>1</span>部署服务并配置授权目标</li><li><span>2</span>按仓库接入文档配置 API 工具</li><li><span>3</span>设置访问令牌并连接工作流</li><li><span>4</span>用内置样例完成平台联调</li></ol></article>
+          <article class="panel"><div class="panel-heading"><h2>定时巡检计划</h2><span class="small-label">服务保持运行时执行</span></div><div class="panel-body"><form id="schedule-form" class="schedule-form"><div><label for="schedule-target">授权目标</label><select id="schedule-target" required></select></div><div><label for="schedule-interval">间隔（分钟）</label><input id="schedule-interval" type="number" min="5" max="10080" value="60" required></div><button class="button primary" type="submit">新增计划</button><label class="check-row schedule-authorization"><input type="checkbox" id="schedule-authorized" required><span>我已获得该目标的持续巡检授权。</span></label></form><div id="schedule-list"></div></div></article>
+          <article class="panel"><div class="panel-heading"><h2>近期事件</h2><span class="small-label">用于了解服务实际执行情况</span></div><div id="event-list" class="panel-body"></div></article>
+        </section>
+      </main>
+      <footer class="main-footer"><span>巡安 · 让每一个判断都有据可查</span><span>授权检查 / 证据留存 / 人工确认</span></footer>
+    </div>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="finding-dialog" aria-labelledby="dialog-title"><div class="dialog-header"><div><p class="eyebrow">FINDING DETAIL</p><h2 id="dialog-title">风险详情</h2></div><button id="close-dialog" class="icon-button" aria-label="关闭风险详情">×</button></div><div id="dialog-content" class="dialog-content"></div></dialog>
+</body>
+</html>

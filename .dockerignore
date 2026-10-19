@@ -1,0 +1,12 @@
+.git
+.github
+data
+reports
+tests
+docs
+integrations
+demo-target
+__pycache__
+*.pyc
+.DS_Store
+

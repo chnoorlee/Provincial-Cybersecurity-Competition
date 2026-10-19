@@ -1,0 +1,1073 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "巡安授权网站巡检 API",
+    "version": "0.1.0",
+    "description": "供恒脑注册受限工具的API契约。同步只读巡检；不执行漏洞利用。需部署真实HTTPS后端并设置X-API-Key。本文件不代表已在恒脑注册或成功运行。 当前使用单管理员共享令牌，未实现多用户权限隔离。"
+  },
+  "servers": [
+    {
+      "url": "https://YOUR-DEPLOYED-HOST.example",
+      "description": "替换为团队实际部署的HTTPS后端；不能使用GitHub Pages托管Python后端"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "paths": {
+    "/api/runs": {
+      "post": {
+        "operationId": "createAuthorizedInspection",
+        "summary": "创建一次授权巡检并返回完整结果",
+        "description": "同步执行。真实URL模式需目标白名单和authorized=true。最大预算可能耗时较长，平台初次接入建议max_pages=3。服务忙时返回冲突，不会自动扩大目标或绕过范围限制。 请求体最大32768字节，Content-Type必须为application/json；正常成功返回201而不是200。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunRequest"
+              },
+              "examples": {
+                "demoBefore": {
+                  "summary": "合成样例修复前",
+                  "value": {
+                    "mode": "demo",
+                    "variant": "before",
+                    "authorized": true,
+                    "custom_keywords": [
+                      "内部资料"
+                    ],
+                    "max_pages": 3
+                  }
+                },
+                "url": {
+                  "summary": "替换为实际授权目标",
+                  "value": {
+                    "mode": "url",
+                    "target": "https://YOUR-AUTHORIZED-DEMO.example/",
+                    "authorized": true,
+                    "custom_keywords": [],
+                    "max_pages": 3
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "JSON格式、授权声明、参数、基线或目标允许范围校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "X-API-Key缺失或不正确",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "已有巡检正在执行，当前请求未创建任务",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "错误信息；没有成功Run时不得生成仿真的巡检结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "巡检记录已创建，返回本次完整结果；网络采集不完整或失败仍可能创建Run并返回201，必须检查status与coverage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Run"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Host不在服务端允许范围，或Origin与配置来源不一致",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type必须为application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务出现未预期错误；返回通用错误消息",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{id}": {
+      "get": {
+        "operationId": "getInspectionResult",
+        "summary": "读取已存在的巡检结果",
+        "description": "读取保存结果，不触发新的网络检查。",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$",
+              "minLength": 32,
+              "maxLength": 32
+            },
+            "description": "由创建接口实际返回的巡检ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "本次实际巡检完整结果；采集不完整或失败也可能返回Run，必须检查status与coverage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Run"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "X-API-Key缺失或不正确",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "任务不存在，或ID不符合32位小写十六进制格式",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "错误信息；没有成功Run时不得生成仿真的巡检结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Host不在服务端允许范围，或Origin与配置来源不一致",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/{id}": {
+      "get": {
+        "operationId": "exportInspectionReport",
+        "summary": "导出巡检报告",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$",
+              "minLength": 32,
+              "maxLength": 32
+            },
+            "description": "由创建接口实际返回的巡检ID"
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "html",
+                "csv",
+                "markdown"
+              ],
+              "default": "json"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "UTF-8下载附件，默认json。JSON包含完整Run；HTML含覆盖错误和限制；Markdown为简要阅读报告；CSV仅含发现表，需配合JSON或HTML核对覆盖范围与限制。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Run"
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string",
+                  "description": "含发现、范围限制和覆盖错误的HTML阅读报告"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "description": "UTF-8 BOM的发现表，不包含完整任务范围、覆盖错误或复测详情"
+                }
+              },
+              "text/markdown": {
+                "schema": {
+                  "type": "string",
+                  "description": "简要阅读报告，完整覆盖字段和原始结构请读取JSON"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "format不是json、html、csv、markdown之一",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "X-API-Key缺失或不正确",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "任务不存在，或ID不符合32位小写十六进制格式",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "错误信息；没有成功Run时不得生成仿真的巡检结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Host不在服务端允许范围，或Origin与配置来源不一致",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "在恒脑保密认证配置中设置。当前实现为单管理员共享服务令牌，不支持按接口或用户细分权限；通过部署范围、网络策略和目标名单控制使用。"
+      }
+    },
+    "schemas": {
+      "RunRequest": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "demo",
+              "url"
+            ],
+            "default": "demo",
+            "description": "demo使用固定合成样例；url访问服务端允许的授权目标"
+          },
+          "variant": {
+            "type": "string",
+            "enum": [
+              "before",
+              "after"
+            ],
+            "default": "before",
+            "description": "只影响演示模式的修复前/后样例"
+          },
+          "target": {
+            "type": "string",
+            "maxLength": 2048,
+            "description": "url模式必填，完整HTTP/HTTPS地址且需在服务端允许名单内；不允许用户信息，查询参数不会被请求"
+          },
+          "authorized": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "两种模式均要求明确确认授权；不替代服务端范围校验"
+          },
+          "custom_keywords": {
+            "type": "array",
+            "maxItems": 30,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "default": [],
+            "description": "字面关键词，区分大小写；不执行用户正则或代码"
+          },
+          "baseline_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "已有同目标、同mode任务ID，用于复测比较",
+            "pattern": "^[a-f0-9]{32}$"
+          },
+          "max_pages": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30,
+            "default": 12,
+            "description": "URL模式请求预算，包含重定向与失败；恒脑初次调用建议3，避免同步工具超时"
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "authorized"
+        ]
+      },
+      "Run": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "minLength": 32,
+            "maxLength": 32
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "target": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "demo",
+              "url"
+            ]
+          },
+          "variant": {
+            "type": "string",
+            "enum": [
+              "before",
+              "after",
+              null
+            ],
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "partial",
+              "failed"
+            ]
+          },
+          "baseline_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "high": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "medium": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "low": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "info": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "total": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": true,
+            "required": [
+              "high",
+              "medium",
+              "low",
+              "info",
+              "total"
+            ]
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            }
+          },
+          "comparison": {
+            "$ref": "#/components/schemas/Comparison"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/Coverage"
+          },
+          "content_changes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "before_hash": {
+                  "type": "string"
+                },
+                "after_hash": {
+                  "type": "string"
+                },
+                "interpretation": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "url",
+                "before_hash",
+                "after_hash",
+                "interpretation"
+              ]
+            }
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "integer"
+                },
+                "content_type": {
+                  "type": "string"
+                },
+                "size": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "source_hash": {
+                  "type": "string"
+                },
+                "fetched_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "url",
+                "status",
+                "content_type",
+                "size",
+                "source_hash",
+                "fetched_at"
+              ]
+            }
+          },
+          "timeline": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "done",
+                    "partial",
+                    "skipped"
+                  ]
+                },
+                "detail": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "step",
+                "status",
+                "detail"
+              ]
+            }
+          },
+          "engine": {
+            "type": "string"
+          },
+          "agent_status": {
+            "type": "string"
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rule_config": {
+            "type": "object",
+            "properties": {
+              "custom_keyword_count": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": true,
+            "required": [
+              "custom_keyword_count"
+            ]
+          },
+          "authorization": {
+            "type": "object",
+            "properties": {
+              "confirmed": {
+                "type": "boolean"
+              },
+              "confirmed_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "scope": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true,
+            "required": [
+              "confirmed",
+              "confirmed_at",
+              "scope"
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id",
+          "created_at",
+          "target",
+          "mode",
+          "variant",
+          "status",
+          "baseline_id",
+          "summary",
+          "findings",
+          "comparison",
+          "coverage",
+          "content_changes",
+          "documents",
+          "timeline",
+          "engine",
+          "agent_status",
+          "limitations",
+          "rule_config",
+          "authorization"
+        ]
+      },
+      "Finding": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "rule_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low",
+              "info"
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "description": "来源地址；查询参数和识别到的敏感内容脱敏"
+          },
+          "evidence": {
+            "type": "string",
+            "description": "脱敏证据片段，不含可直接使用的原始秘密"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "1起始行号；0表示响应头等不对应正文行的证据"
+          },
+          "impact": {
+            "type": "string"
+          },
+          "remediation": {
+            "type": "string"
+          },
+          "tool": {
+            "type": "string"
+          },
+          "fingerprint": {
+            "type": "string"
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "review_status": {
+            "type": "string",
+            "description": "人工复核状态；首次创建为pending；confirmed仅表示人工确认线索，不代表系统执行过漏洞利用",
+            "enum": [
+              "pending",
+              "confirmed",
+              "false_positive"
+            ]
+          },
+          "review_note": {
+            "type": "string",
+            "description": "可选人工复核备注"
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id",
+          "rule_id",
+          "title",
+          "category",
+          "severity",
+          "confidence",
+          "url",
+          "evidence",
+          "line",
+          "impact",
+          "remediation",
+          "tool",
+          "fingerprint",
+          "observed_at"
+        ],
+        "description": "规则产生的待复核线索，不是已证实可利用漏洞。"
+      },
+      "Comparison": {
+        "type": "object",
+        "properties": {
+          "new": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            }
+          },
+          "persistent": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            }
+          },
+          "not_observed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            }
+          },
+          "uncertain": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            }
+          },
+          "counts": {
+            "type": "object",
+            "properties": {
+              "new": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "persistent": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "not_observed": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "uncertain": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": true,
+            "required": [
+              "new",
+              "persistent",
+              "not_observed",
+              "uncertain"
+            ]
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Finding"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "new",
+                        "persistent",
+                        "not_observed",
+                        "uncertain"
+                      ]
+                    }
+                  },
+                  "additionalProperties": true,
+                  "required": [
+                    "status"
+                  ]
+                }
+              ]
+            }
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "inspected_urls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "current_total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "baseline_total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "baseline_note": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "new",
+          "persistent",
+          "not_observed",
+          "uncertain",
+          "counts",
+          "entries",
+          "complete",
+          "inspected_urls",
+          "current_total",
+          "baseline_total"
+        ],
+        "description": "not_observed仅表示本轮满足覆盖条件且未再观察到；uncertain表示覆盖不足。两者均不是已修复结论。无基线时首轮全部计为new。"
+      },
+      "Coverage": {
+        "type": "object",
+        "properties": {
+          "complete": {
+            "type": "boolean",
+            "description": "只针对本轮可发现和计划范围；true不代表整个网站已覆盖或安全"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "url",
+                "reason"
+              ]
+            }
+          },
+          "visited": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "成功采集的文本资源数"
+          },
+          "attempted": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "尝试请求数，包括重定向和失败"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "本轮请求预算；演示模式为固定样例数量"
+          },
+          "skipped": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "因范围、文件类型或策略跳过的发现链接数"
+          },
+          "pending": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "预算结束时仍待访问的条目数"
+          },
+          "scope_note": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "complete",
+          "errors",
+          "visited",
+          "attempted",
+          "limit",
+          "skipped",
+          "pending",
+          "scope_note"
+        ]
+      }
+    }
+  }
+}
