@@ -1,0 +1,30 @@
+name: Import project bundle from base64
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - project-upload.b64
+
+permissions:
+  contents: write
+
+jobs:
+  import-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Decode and expand project bundle
+        run: |
+          base64 --decode project-upload.b64 > project-upload.zip
+          unzip -o project-upload.zip
+          rm project-upload.zip project-upload.b64 .github/workflows/import-base64.yml .github/workflows/import-project.yml
+      - name: Commit project files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: add XunAn website security inspection agent"
+          git push
